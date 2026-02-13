@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dijocash | Smart RFID Solutions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #121212; color: #e5e7eb; }
+        .gold-gradient { background: linear-gradient(135deg, #d4af37 0%, #f9e29d 100%); }
+        .card-glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .rfid-glow { box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+        @keyframes pulse-gold { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .scanning { animation: pulse-gold 1.5s infinite; }
+        
+        /* FAQ Accordion Styling */
+        .faq-item { border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .faq-item.active .faq-answer { max-height: 200px; padding-bottom: 1.5rem; }
+        .faq-item.active .faq-icon { transform: rotate(45deg); }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <nav class="flex justify-between items-center p-8 max-w-7xl mx-auto sticky top-0 z-50 bg-[#121212]/80 backdrop-blur-md">
+        <div class="text-2xl font-bold gold-gradient bg-clip-text text-transparent">Dijocash</div>
+        <div class="hidden md:flex space-x-8 text-sm uppercase tracking-widest text-gray-400">
+            <a href="#services" class="hover:text-white transition">Service</a>
+            <a href="#how-it-works" class="hover:text-white transition">How it Works</a>
+            <a href="#faq" class="hover:text-white transition">FAQ</a>
+            <a href="#contact" class="hover:text-white transition">Contact</a>
+        </div>
+        <button class="border border-[#d4af37] text-[#d4af37] px-6 py-2 rounded-full hover:bg-[#d4af37] hover:text-black transition"><a href="/frontend/auth.html">Get started</a></button>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-8 py-12 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
+        <div>
+            <h1 class="text-6xl font-bold leading-tight mb-6">
+                Fast And Simple <br>
+                <span class="gold-gradient bg-clip-text text-transparent">Digital Payment</span> Solution
+            </h1>
+            <p class="text-gray-400 text-lg mb-8 max-w-md">
+                Secure RFID technology integrated into a sleek, premium card design. Manage your transactions with a single tap.
+            </p>
+            <div class="flex space-x-4">
+                <button class="gold-gradient text-black font-bold px-8 py-4 rounded-lg shadow-lg hover:brightness-110">Get Started</button>
+                <button class="bg-white/10 px-8 py-4 rounded-lg hover:bg-white/20 transition">Learn More</button>
+            </div>
+        </div>
+
+        <div class="relative flex flex-col items-center">
+            <div id="rfid-card" class="w-96 h-56 bg-gradient-to-br from-gray-800 to-black rounded-2xl p-8 shadow-2xl border border-white/10 relative overflow-hidden transition-transform duration-500 hover:scale-105">
+                <div class="flex justify-between items-start">
+                    <div class="text-[#d4af37] font-semibold text-xl">Dijocash</div>
+                    <div class="w-10 h-8 bg-yellow-600/20 rounded-md border border-yellow-600/50"></div>
+                </div>
+                <div class="mt-12 text-2xl tracking-[0.2em] font-light">1234 5678 9012 245</div>
+                <div class="mt-8 flex justify-between text-xs text-gray-500">
+                    <div>CARD HOLDER<br><span class="text-white text-sm">JOHN DOE</span></div>
+                    <div>EXPIRES<br><span class="text-white text-sm">06/28</span></div>
+                </div>
+                <div class="absolute right-6 top-1/2 -translate-y-1/2 text-gray-600">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18,12c0-3.31-2.69-6-6-6s-6,2.69-6,6s2.69,6,6,6S18,15.31,18,12z M8,12c0-2.21,1.79-4,4-4s4,1.79,4,4s-1.79,4-4,4 S8,14.21,8,12z"/></svg>
+                </div>
+            </div>
+
+            <div class="card-glass w-80 mt-[-40px] z-10 p-6 rounded-xl shadow-2xl">
+                <div class="flex justify-between mb-4">
+                    <span class="text-gray-400 text-sm">Current Balance</span>
+                    <span class="text-[#d4af37] font-bold" id="balance">$2,345.67</span>
+                </div>
+                <div class="space-y-3">
+                    <div class="text-xs text-gray-500 uppercase">Recent Activity</div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span>Starbucks Coffee</span>
+                        <span class="text-red-400">-$4.50</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span>RFID Top-up</span>
+                        <span class="text-green-400">+$100.00</span>
+                    </div>
+                </div>
+                <button id="scan-btn" class="w-full mt-6 py-2 border border-dashed border-gray-600 rounded text-xs text-gray-400 hover:border-[#d4af37] hover:text-[#d4af37] transition uppercase tracking-widest">
+                    Simulate Scan
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <section id="services" class="py-24 bg-black/30">
+        <div class="max-w-7xl mx-auto px-8">
+            <h2 class="text-3xl font-bold mb-12 text-center uppercase tracking-widest">Our <span class="text-gold">Services</span></h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="card-glass p-8 rounded-2xl hover:border-gold/50 transition cursor-default">
+                    <div class="text-3xl mb-4">🛡️</div>
+                    <h3 class="text-xl font-bold mb-3">Secure Payments</h3>
+                    <p class="text-gray-400 text-sm">Advanced encryption for every RFID tap, keeping your funds safe from skimming.</p>
+                </div>
+                <div class="card-glass p-8 rounded-2xl hover:border-gold/50 transition cursor-default">
+                    <div class="text-3xl mb-4">📈</div>
+                    <h3 class="text-xl font-bold mb-3">Real-time Analytics</h3>
+                    <p class="text-gray-400 text-sm">Track every penny spent through our integrated dashboard and mobile alerts.</p>
+                </div>
+                <div class="card-glass p-8 rounded-2xl hover:border-gold/50 transition cursor-default">
+                    <div class="text-3xl mb-4">⚡</div>
+                    <h3 class="text-xl font-bold mb-3">Instant Top-up</h3>
+                    <p class="text-gray-400 text-sm">Load your card instantly using our MQTT-powered microservice architecture.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="py-24">
+        <div class="max-w-7xl mx-auto px-8">
+            <div class="flex flex-col md:flex-row items-center gap-16">
+                <div class="md:w-1/2">
+                    <h2 class="text-4xl font-bold mb-8">How <span class="text-gold">Dijocash</span> Works</h2>
+                    <div class="space-y-8">
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full gold-gradient flex items-center justify-center text-black font-bold shrink-0">1</div>
+                            <p class="text-gray-300">Register your RFID card on our secure portal to activate your account.</p>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full gold-gradient flex items-center justify-center text-black font-bold shrink-0">2</div>
+                            <p class="text-gray-300">Tap your card at any Dilocash-enabled kiosk or payment terminal.</p>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full gold-gradient flex items-center justify-center text-black font-bold shrink-0">3</div>
+                            <p class="text-gray-300">Payment is processed instantly via our cloud-based VPS infrastructure.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:w-1/2 card-glass p-1 rounded-3xl overflow-hidden shadow-2xl">
+                    <img src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&w=800" alt="Payment terminal" class="rounded-3xl opacity-80 hover:opacity-100 transition duration-500">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="faq" class="py-24 bg-black/20">
+        <div class="max-w-3xl mx-auto px-8">
+            <h2 class="text-4xl font-bold mb-12 text-center">Frequently Asked <span class="text-gold">Questions</span></h2>
+            <div class="space-y-2">
+                <div class="faq-item active px-4 py-2" onclick="toggleFaq(this)">
+                    <button class="w-full flex justify-between items-center py-6 text-left font-semibold">
+                        <span>Is my money safe if I lose the card?</span>
+                        <span class="faq-icon text-2xl transition-transform">+</span>
+                    </button>
+                    <div class="faq-answer text-gray-400">
+                        Yes. You can instantly freeze your card via the dashboard. Since balance is stored in the cloud (not just on the card), your funds are fully protected.
+                    </div>
+                </div>
+                <div class="faq-item px-4 py-2" onclick="toggleFaq(this)">
+                    <button class="w-full flex justify-between items-center py-6 text-left font-semibold">
+                        <span>What is the transaction limit?</span>
+                        <span class="faq-icon text-2xl transition-transform">+</span>
+                    </button>
+                    <div class="faq-answer text-gray-400">
+                        Default limit is 50,000 RWF per tap for security, but you can adjust these limits within your profile settings.
+                    </div>
+                </div>
+                <div class="faq-item px-4 py-2" onclick="toggleFaq(this)">
+                    <button class="w-full flex justify-between items-center py-6 text-left font-semibold">
+                        <span>Can I use this for public transport?</span>
+                        <span class="faq-icon text-2xl transition-transform">+</span>
+                    </div>
+                    <div class="faq-answer text-gray-400">
+                        Absolutely. Dijocash is designed for micro-transactions, making it perfect for buses, cafes, and small retail payments.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="py-24 max-w-7xl mx-auto px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div class="card-glass p-10 rounded-3xl">
+                <h3 class="text-2xl font-bold mb-6">Send a Message</h3>
+                <form class="space-y-4">
+                    <input type="text" placeholder="Name" class="w-full bg-white/5 border border-white/10 rounded-lg p-3 focus:outline-none focus:border-gold">
+                    <input type="email" placeholder="Email" class="w-full bg-white/5 border border-white/10 rounded-lg p-3 focus:outline-none focus:border-gold">
+                    <textarea placeholder="Message" rows="4" class="w-full bg-white/5 border border-white/10 rounded-lg p-3 focus:outline-none focus:border-gold"></textarea>
+                    <button type="button" class="w-full gold-gradient text-black font-bold py-3 rounded-lg">Send Message</button>
+                </form>
+            </div>
+            <div class="flex flex-col justify-center items-start lg:pl-12">
+                <h3 class="text-3xl font-bold mb-4">Stay in the Loop</h3>
+                <p class="text-gray-400 mb-8">Subscribe to get notified about new features, system updates, and new partner locations.</p>
+                <div class="flex w-full gap-2">
+                    <input type="email" placeholder="Your Email" class="flex-1 bg-white/5 border border-white/10 rounded-lg p-3 focus:outline-none focus:border-gold">
+                    <button class="px-6 py-3 gold-gradient text-black font-bold rounded-lg shrink-0">Subscribe</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="border-t border-white/10 pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="text-2xl font-bold gold-gradient bg-clip-text text-transparent mb-6">Dijocash</div>
+                    <p class="text-gray-400 text-sm max-w-sm">The leading RFID microservice platform for modern payments and secure IoT transactions.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-6 uppercase text-xs tracking-widest">Platform</h4>
+                    <ul class="text-gray-500 text-sm space-y-4">
+                        <li><a href="#" class="hover:text-gold transition">Dashboard</a></li>
+                        <li><a href="#" class="hover:text-gold transition">API Docs</a></li>
+                        <li><a href="#" class="hover:text-gold transition">Partners</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-6 uppercase text-xs tracking-widest">Social</h4>
+                    <ul class="text-gray-500 text-sm space-y-4">
+                        <li><a href="#" class="hover:text-gold transition">Twitter / X</a></li>
+                        <li><a href="#" class="hover:text-gold transition">LinkedIn</a></li>
+                        <li><a href="#" class="hover:text-gold transition">GitHub</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row justify-between items-center text-xs text-gray-600 border-t border-white/5 pt-8">
+                <p>© 2024 Dijocash RFID Inc. All rights reserved.</p>
+                <div class="flex gap-6 mt-4 md:mt-0">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Existing Card Logic
+        const scanBtn = document.getElementById('scan-btn');
+        const card = document.getElementById('rfid-card');
+        const balanceEl = document.getElementById('balance');
+
+        scanBtn.addEventListener('click', () => {
+            scanBtn.innerText = "Scanning...";
+            scanBtn.classList.add('scanning');
+            card.classList.add('rfid-glow');
+
+            setTimeout(() => {
+                let current = parseFloat(balanceEl.innerText.replace('$', '').replace(',', ''));
+                current -= 12.00;
+                balanceEl.innerText = `$${current.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+
+                scanBtn.innerText = "Simulate Scan";
+                scanBtn.classList.remove('scanning');
+                card.classList.remove('rfid-glow'); 
+                alert('RFID Transaction Successful: -$12.00');
+            }, 1500);
+        });
+
+        // FAQ Toggle Script
+        function toggleFaq(el) {
+            // Close other items
+            document.querySelectorAll('.faq-item').forEach(item => {
+                if(item !== el) item.classList.remove('active');
+            });
+            // Toggle current
+            el.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

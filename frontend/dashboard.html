@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dilocash Pro | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d0d0d;
+            color: #e5e7eb;
+        }
+
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37 0%, #f9e29d 100%);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .input-dark {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-dark:focus {
+            border-color: #d4af37;
+            outline: none;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(212, 175, 55, 0.1);
+            color: #d4af37;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 10px;
+        }
+
+        /* Responsive Sidebar Logic */
+        @media (max-width: 1024px) {
+            #main-sidebar {
+                position: fixed;
+                left: -100%;
+                z-index: 50;
+                transition: 0.3s ease-in-out;
+            }
+
+            #main-sidebar.active {
+                left: 0;
+            }
+
+            #overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.6);
+                z-index: 40;
+            }
+
+            #overlay.active {
+                display: block;
+            }
+        }
+
+        /* UI Disabled State */
+        .ui-disabled {
+            filter: grayscale(1) blur(2px);
+            opacity: 0.5;
+            pointer-events: none;
+            transition: all 0.4s ease;
+        }
+
+        /* Loading Overlay */
+        .loader-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .loader-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .loader-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(212, 175, 55, 0.2);
+            border-top-color: #d4af37;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-text {
+            margin-top: 20px;
+            color: #d4af37;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+
+<body class="flex min-h-screen">
+
+    <!-- Loading Overlay -->
+    <div id="loader-overlay" class="loader-overlay active">
+        <div class="loader-spinner"></div>
+        <div class="loader-text" id="loader-text">LOADING DASHBOARD...</div>
+    </div>
+
+    <div id="overlay" onclick="toggleSidebar()"></div>
+
+    <div class="lg:hidden fixed top-0 left-0 right-0 h-16 glass-card z-30 flex items-center px-6 justify-between">
+        <h1 class="text-xl font-bold gold-gradient bg-clip-text text-transparent">Dilocash</h1>
+        <button onclick="toggleSidebar()" class="p-2 text-gold text-2xl">☰</button>
+    </div>
+
+    <aside id="main-sidebar"
+        class="w-64 border-r border-white/5 flex flex-col glass-card sticky top-0 h-screen shrink-0">
+        <div class="p-8">
+            <h1 class="text-2xl font-bold gold-gradient bg-clip-text text-transparent">Dilocash</h1>
+            <p class="text-[10px] text-gray-500 tracking-widest mt-1 uppercase">RFID Microservice</p>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-2">
+            <a href="#" onclick="showView('dashboard'); return false;"
+                class="flex items-center gap-3 p-3 rounded-lg sidebar-link text-white bg-white/5" id="nav-dashboard">
+                <span>🏠</span> Dashboard
+            </a>
+            <a href="#" onclick="showView('cards'); return false;"
+                class="flex items-center gap-3 p-3 rounded-lg sidebar-link" id="nav-cards">
+                <span>💳</span> Card Registry
+            </a>
+            <a href="#" onclick="showView('analytics'); return false;"
+                class="flex items-center gap-3 p-3 rounded-lg sidebar-link" id="nav-analytics">
+                <span>📊</span> Analytics
+            </a>
+            <a href="#" onclick="showView('profile'); return false;"
+                class="flex items-center gap-3 p-3 rounded-lg sidebar-link" id="nav-profile">
+                <span>👤</span> Profile
+            </a>
+            <a href="#" onclick="showView('settings'); return false;"
+                class="flex items-center gap-3 p-3 rounded-lg sidebar-link" id="nav-settings">
+                <span>⚙️</span> System Settings
+            </a>
+        </nav>
+
+        <div class="p-6 border-t border-white/5">
+            <div class="flex items-center gap-3">
+                <div id="user-initials"
+                    class="w-8 h-8 rounded-full gold-gradient flex items-center justify-center text-black font-bold">SP
+                </div>
+                <div class="text-xs">
+                    <p id="user-name-display" class="text-white font-semibold">Sundar Pichai</p>
+                    <p class="text-gray-500">Admin</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 overflow-y-auto mt-16 lg:mt-0">
+
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="view-container">
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-white">System Overview</h2>
+                    <p class="text-gray-500">Manage your RFID ecosystem in real-time.</p>
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="exportLogs()"
+                        class="px-4 py-2 glass-card rounded-lg text-xs border-gold hover:bg-white/5">Export
+                        Logs</button>
+                    <button onclick="logout()"
+                        class="px-4 py-2 gold-gradient text-black rounded-lg text-xs font-bold shadow-lg shadow-yellow-600/20">Log
+                        out</button>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="glass-card p-5 rounded-2xl">
+                    <p class="text-gray-500 text-[10px] uppercase tracking-wider mb-2">Total Balance</p>
+                    <h4 class="text-2xl font-bold text-white" id="total-balance-card">0 <span
+                            class="text-xs text-gray-500">RWF</span></h4>
+                </div>
+                <div class="glass-card p-5 rounded-2xl">
+                    <p class="text-gray-500 text-[10px] uppercase tracking-wider mb-2">Active Cards</p>
+                    <h4 class="text-2xl font-bold text-white" id="active-cards-card">0</h4>
+                </div>
+                <div class="glass-card p-5 rounded-2xl">
+                    <p class="text-gray-500 text-[10px] uppercase tracking-wider mb-2">Today's Top-ups</p>
+                    <h4 class="text-2xl font-bold text-white" id="todays-topups-card">0 <span
+                            class="text-xs text-gray-500">RWF</span></h4>
+                </div>
+                <div class="glass-card p-5 rounded-2xl border-l-4 border-gold">
+                    <p class="text-gray-500 text-[10px] uppercase tracking-wider mb-2">System Status</p>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <h4 class="text-sm font-bold text-white">Cloud Sync Active</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- ... (Card and Actions remain the same) ... -->
+                <!-- RFID Card Visual -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div id="visual-card-container"
+                        class="ui-disabled w-full aspect-[1.58/1] bg-gradient-to-br from-gray-800 to-black rounded-2xl p-8 shadow-2xl border border-white/10 relative overflow-hidden group select-none">
+                        <div
+                            class="absolute inset-0 bg-yellow-600/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        </div>
+                        <div class="flex justify-between relative z-10">
+                            <span class="text-[#d4af37] font-semibold">Dilocash Card</span>
+                            <div class="w-10 h-8 bg-yellow-600/20 rounded-md border border-yellow-600/50"></div>
+                        </div>
+                        <div class="mt-12 text-2xl tracking-widest font-light text-white" id="display-uid">SCAN CARD
+                        </div>
+                        <div class="mt-8 flex justify-between relative z-10">
+                            <div>
+                                <p class="text-[10px] text-gray-500 uppercase">Card Owner</p>
+                                <p class="text-white text-sm font-bold uppercase" id="display-name">Guest User</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-[10px] text-gray-500 uppercase">Balance</p>
+                                <p class="text-gold text-sm font-bold" id="display-balance">0 RWF</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] text-gray-500 uppercase">Currency</p>
+                                <p class="text-white text-sm font-bold">RWF</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="card-actions-container" class="ui-disabled glass-card p-6 rounded-2xl space-y-4">
+                        <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400">Card Actions</h3>
+                        <div>
+                            <label class="block text-[10px] text-gray-500 mb-2 uppercase">Assign New Owner</label>
+                            <input type="text" id="new-owner" placeholder="Name"
+                                class="w-full input-dark rounded-lg px-4 py-3 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-500 mb-2 uppercase">Top-Up Amount</label>
+                            <input type="number" id="topup-amount" placeholder="0.00"
+                                class="w-full input-dark rounded-lg px-4 py-3 text-sm">
+                        </div>
+                        <div class="flex gap-4">
+                            <button onclick="resetUI()"
+                                class="flex-1 bg-white/5 text-gray-400 font-bold py-3 rounded-lg hover:bg-white/10 transition">
+                                Clear
+                            </button>
+                            <button onclick="updateAccount()"
+                                class="flex-[2] gold-gradient text-black font-bold py-3 rounded-lg hover:brightness-110 active:scale-[0.98] transition">
+                                Confirm Transaction
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="glass-card rounded-2xl p-8">
+                        <div class="flex justify-between items-start mb-8">
+                            <div>
+                                <p class="text-gray-500 text-xs uppercase tracking-widest">Active Balance</p>
+                                <h3 class="text-5xl font-bold mt-2 text-white" id="current-balance">0 <span
+                                        class="text-xl font-normal text-gray-600">RWF</span></h3>
+                            </div>
+                            <div class="bg-white/5 p-3 rounded-xl border border-white/10 text-center min-w-[100px]">
+                                <p class="text-[10px] text-gray-500 uppercase">Status</p>
+                                <p class="text-gold text-xs font-bold" id="status-tag">IDLE</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-xs uppercase tracking-widest text-gray-500">System Logs</h4>
+                                <button onclick="document.getElementById('activity-log').innerHTML=''"
+                                    class="text-[10px] text-gray-600 hover:text-white transition">Clear</button>
+                            </div>
+                            <div id="activity-log"
+                                class="bg-black/40 border border-white/5 rounded-xl p-4 h-48 overflow-y-auto text-[11px] font-mono space-y-2 text-gray-500">
+                                <p class="text-gold">> [SYSTEM] Dashboard Ready. WebSocket connecting...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Debug Panel (HIDDEN - Only real hardware scans allowed) -->
+                    <div id="debug-panel" class="glass-card rounded-2xl p-4 border-l-4 border-red-500"
+                        style="display:none;">
+                        <h4 class="text-[10px] font-bold uppercase tracking-widest text-red-500 mb-2">Diagnostic Hub
+                        </h4>
+                        <div class="flex flex-wrap gap-2">
+                            <div class="bg-black/40 px-3 py-1 rounded-full text-[9px] text-gray-400">
+                                WS: <span id="ws-status" class="text-red-500 font-bold">DISCONNECTED</span>
+                            </div>
+                            <button onclick="simulateScan()"
+                                class="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[9px] px-3 py-1 rounded-full border border-red-500/20 transition">
+                                Simulate Card (Bypass)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-2xl overflow-hidden overflow-x-auto">
+                        <div class="p-4 border-b border-white/5 bg-white/2">
+                            <h4 class="text-xs font-bold uppercase tracking-widest">Recent Transactions</h4>
+                        </div>
+                        <table class="w-full text-left text-xs min-w-[400px]">
+                            <thead class="bg-black/20 text-gray-500 uppercase text-[10px]">
+                                <tr>
+                                    <th class="p-4">Card UID</th>
+                                    <th class="p-4">Owner</th>
+                                    <th class="p-4 text-right">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5" id="tx-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END DASHBOARD VIEW -->
+
+        <!-- CARD REGISTRY VIEW -->
+        <div id="view-cards" class="view-container" style="display:none;">
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-white">Card Registry</h2>
+                    <p class="text-gray-500">View and manage all registered RFID cards.</p>
+                </div>
+                <button onclick="refreshCards()"
+                    class="px-4 py-2 gold-gradient text-black rounded-lg text-xs font-bold">Refresh</button>
+            </header>
+
+            <div class="glass-card rounded-2xl overflow-hidden">
+                <div class="p-6">
+                    <input type="text" id="card-search" placeholder="Search by UID or Owner..."
+                        class="w-full input-dark rounded-lg px-4 py-3 text-sm mb-4" onkeyup="filterCards()">
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-black/20 text-gray-500 uppercase text-xs">
+                            <tr>
+                                <th class="p-4">Card UID</th>
+                                <th class="p-4">Owner</th>
+                                <th class="p-4 text-right">Balance</th>
+                                <th class="p-4">Last Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5" id="cards-table-body">
+                            <tr>
+                                <td colspan="4" class="p-4 text-center text-gray-500">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- END CARD REGISTRY VIEW -->
+
+        <!-- ANALYTICS VIEW -->
+        <div id="view-analytics" class="view-container" style="display:none;">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-white">Analytics</h2>
+                <p class="text-gray-500">Transaction insights and system metrics.</p>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="glass-card p-6 rounded-2xl">
+                    <p class="text-gray-500 text-xs uppercase tracking-wider mb-2">Total Transactions</p>
+                    <h4 class="text-3xl font-bold text-white" id="analytics-total-tx">0</h4>
+                </div>
+                <div class="glass-card p-6 rounded-2xl">
+                    <p class="text-gray-500 text-xs uppercase tracking-wider mb-2">Average Transaction</p>
+                    <h4 class="text-3xl font-bold text-white" id="analytics-avg-tx">0 <span
+                            class="text-sm text-gray-500">RWF</span></h4>
+                </div>
+                <div class="glass-card p-6 rounded-2xl">
+                    <p class="text-gray-500 text-xs uppercase tracking-wider mb-2">This Week</p>
+                    <h4 class="text-3xl font-bold text-white" id="analytics-week-tx">0 <span
+                            class="text-sm text-gray-500">RWF</span></h4>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-6">
+                <h3 class="text-lg font-bold text-white mb-4">All Transactions</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-black/20 text-gray-500 uppercase text-xs">
+                            <tr>
+                                <th class="p-4">Date</th>
+                                <th class="p-4">Card UID</th>
+                                <th class="p-4">Owner</th>
+                                <th class="p-4 text-right">Amount</th>
+                                <th class="p-4 text-right">New Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5" id="analytics-table-body">
+                            <tr>
+                                <td colspan="5" class="p-4 text-center text-gray-500">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- END ANALYTICS VIEW -->
+
+        <!-- PROFILE VIEW -->
+        <div id="view-profile" class="view-container" style="display:none;">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-white">My Profile</h2>
+                <p class="text-gray-500">Manage your account settings.</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="glass-card p-6 rounded-2xl text-center">
+                    <div id="profile-avatar"
+                        class="w-24 h-24 rounded-full gold-gradient flex items-center justify-center text-black text-3xl font-bold mx-auto mb-4">
+                        SP
+                    </div>
+                    <h3 class="text-xl font-bold text-white" id="profile-name">Loading...</h3>
+                    <p class="text-gray-500 text-sm" id="profile-email">email@example.com</p>
+                    <p class="text-gold text-xs mt-2">Administrator</p>
+                </div>
+
+                <div class="lg:col-span-2 glass-card p-6 rounded-2xl">
+                    <h3 class="text-lg font-bold text-white mb-4">Account Information</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-2 uppercase">Username</label>
+                            <input type="text" id="profile-username"
+                                class="w-full input-dark rounded-lg px-4 py-3 text-sm" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-2 uppercase">Email Address</label>
+                            <input type="email" id="profile-email-input"
+                                class="w-full input-dark rounded-lg px-4 py-3 text-sm" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-2 uppercase">Member Since</label>
+                            <input type="text" id="profile-created"
+                                class="w-full input-dark rounded-lg px-4 py-3 text-sm" readonly>
+                        </div>
+                        <div class="pt-4">
+                            <button onclick="logout()"
+                                class="w-full bg-red-500/10 text-red-500 font-bold py-3 rounded-lg hover:bg-red-500/20 transition border border-red-500/20">
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END PROFILE VIEW -->
+
+        <!-- SETTINGS VIEW -->
+        <div id="view-settings" class="view-container" style="display:none;">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-white">System Settings</h2>
+                <p class="text-gray-500">Configure system parameters.</p>
+            </header>
+
+            <div class="glass-card p-6 rounded-2xl space-y-6">
+                <div>
+                    <h3 class="text-lg font-bold text-white mb-4">MQTT Configuration</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-2 uppercase">Broker Address</label>
+                            <input type="text" value="broker.benax.rw"
+                                class="w-full input-dark rounded-lg px-4 py-3 text-sm" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-2 uppercase">Team ID</label>
+                            <input type="text" value="ivan_bright"
+                                class="w-full input-dark rounded-lg px-4 py-3 text-sm" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-white/5 pt-6">
+                    <h3 class="text-lg font-bold text-white mb-4">System Information</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="text-gray-500">Database Status</p>
+                            <p class="text-white font-bold">Connected</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">WebSocket Status</p>
+                            <p class="text-white font-bold" id="settings-ws-status">Connected</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Active Cards</p>
+                            <p class="text-white font-bold" id="settings-active-cards">0</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Total Transactions</p>
+                            <p class="text-white font-bold" id="settings-total-tx">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END SETTINGS VIEW -->
+
+    </main>
+
+    <script>
+        // Loader functions
+        function showLoader(text = 'LOADING...') {
+            const overlay = document.getElementById('loader-overlay');
+            const loaderText = document.getElementById('loader-text');
+            loaderText.textContent = text;
+            overlay.classList.add('active');
+        }
+
+        function hideLoader() {
+            const overlay = document.getElementById('loader-overlay');
+            overlay.classList.remove('active');
+        }
+
+        // Immediate auth check - prevent unauthorized access
+        (async function () {
+            try {
+                const response = await fetch('/me', { credentials: 'include' });
+                if (!response.ok) {
+                    window.location.replace('auth.html');
+                }
+            } catch (err) {
+                window.location.replace('auth.html');
+            }
+        })();
+
+        let currentUID = null;
+        let lastDetectedUID = null; // Track if we already processed this card
+
+        // Auth check on load
+        window.onload = async () => {
+            try {
+                showLoader('LOADING DASHBOARD...');
+                const response = await fetch(`/me`, {
+                    credentials: 'include'
+                });
+                if (!response.ok) {
+                    window.location.href = 'auth.html';
+                    return;
+                }
+                const user = await response.json();
+                currentUser = user; // Store for profile view
+                document.getElementById('user-name-display').innerText = user.username;
+                const initials = user.username.split(' ').map(n => n[0]).join('').toUpperCase();
+                document.getElementById('user-initials').innerText = initials;
+
+                // Fetch initial dashboard data
+                await fetchDashboardData();
+
+                // Hide loader after everything is loaded
+                setTimeout(() => hideLoader(), 500);
+            } catch (err) {
+                console.error("Auth check failed:", err);
+                window.location.href = 'auth.html';
+            }
+        };
+
+        async function fetchDashboardData() {
+            try {
+                // Fetch Stats
+                try {
+                    const statsRes = await fetch('/stats');
+                    if (statsRes.ok) {
+                        const stats = await statsRes.json();
+                        document.getElementById('total-balance-card').innerHTML = `${stats.total_balance.toLocaleString()} <span class="text-xs text-gray-500">RWF</span>`;
+                        document.getElementById('active-cards-card').innerText = stats.active_cards;
+                        document.getElementById('todays-topups-card').innerHTML = `${stats.todays_topups.toLocaleString()} <span class="text-xs text-gray-500">RWF</span>`;
+                    }
+                } catch (e) { console.warn("Stats fetch failed", e); }
+
+                // Fetch Transactions
+                try {
+                    const txRes = await fetch('/transactions');
+                    if (txRes.ok) {
+                        const txs = await txRes.json();
+                        const body = document.getElementById('tx-table-body');
+                        body.innerHTML = ''; // Clear current
+
+                        if (txs.length === 0) {
+                            body.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">No transactions yet</td></tr>';
+                        } else {
+                            // Show only the 5 most recent transactions
+                            txs.slice(0, 5).forEach(tx => {
+                                const row = `<tr>
+                                    <td class="p-4 font-mono text-gold">${tx.uid}</td>
+                                    <td class="p-4 text-gray-300">${tx.owner || 'Guest User'}</td>
+                                    <td class="p-4 text-right font-bold text-white">${tx.newBalance ? tx.newBalance.toLocaleString() : '0'} RWF</td>
+                                </tr>`;
+                                body.insertAdjacentHTML('beforeend', row);
+                            });
+                        }
+                    }
+                } catch (e) { console.warn("Transactions fetch failed", e); }
+            } catch (err) {
+                console.error("Dashboard refresh loop error:", err);
+            }
+        }
+
+        // Responsive Sidebar Toggle
+        function toggleSidebar() {
+            document.getElementById('main-sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        const ws = new WebSocket(`ws://${window.location.host}`);
+
+        ws.onopen = () => {
+            console.log("🔌 [WS] Connection Opened");
+            document.getElementById('ws-status').innerText = "CONNECTED";
+            document.getElementById('ws-status').classList.remove('text-red-500');
+            document.getElementById('ws-status').classList.add('text-green-500');
+            logActivity("WebSocket Connected Successfully");
+        };
+
+        ws.onclose = () => {
+            console.warn("🔌 [WS] Connection Closed");
+            document.getElementById('ws-status').innerText = "DISCONNECTED";
+            document.getElementById('ws-status').classList.add('text-red-500');
+            document.getElementById('ws-status').classList.remove('text-green-500');
+            logActivity("WebSocket Connection Lost!");
+        };
+
+        ws.onmessage = (event) => {
+            console.log("[WS] Message received:", event.data);
+            const data = JSON.parse(event.data);
+
+            // Handle card status (scan)
+            if (data.type === 'card_status') {
+                const card = data.data;
+
+                // Handle card removal
+                if (card.present === false || card.status === 'removed') {
+                    logActivity(`Card Removed: ${card.uid}`);
+                    resetUI();
+                    lastDetectedUID = null;
+                    return;
+                }
+
+                // Handle card detection - only update if it's a new card or first detection
+                if (lastDetectedUID !== card.uid) {
+                    currentUID = card.uid;
+                    lastDetectedUID = card.uid;
+
+                    // Enable UI
+                    document.getElementById('visual-card-container').classList.remove('ui-disabled');
+                    document.getElementById('card-actions-container').classList.remove('ui-disabled');
+
+                    document.getElementById('display-uid').innerText = card.uid;
+                    document.getElementById('display-name').innerText = card.owner || "Guest User";
+                    document.getElementById('display-balance').innerText = `${card.balance.toLocaleString()} RWF`;
+                    document.getElementById('current-balance').innerHTML = `${card.balance.toLocaleString()} <span class="text-xl font-normal text-gray-600">RWF</span>`;
+                    document.getElementById('status-tag').innerText = "CARD DETECTED";
+
+                    // Pre-fill form with existing data ONLY on first detection
+                    document.getElementById('new-owner').value = card.owner || '';
+
+                    logActivity(`Card Detected: ${card.uid} (Owner: ${card.owner || 'None'})`);
+                }
+            }
+
+            // Handle balance update
+            if (data.type === 'balance_update') {
+                const update = data.data;
+                if (currentUID === update.uid) {
+                    document.getElementById('display-balance').innerText = `${update.balance.toLocaleString()} RWF`;
+                    document.getElementById('current-balance').innerHTML = `${update.balance.toLocaleString()} <span class="text-xl font-normal text-gray-600">RWF</span>`;
+
+                    // Update owner name if provided
+                    if (update.owner) {
+                        document.getElementById('display-name').innerText = update.owner;
+                    }
+                }
+                logActivity(`Balance Updated for ${update.uid}: +${update.amount}`);
+                fetchDashboardData();
+            }
+        };
+
+        async function updateAccount() {
+            const name = document.getElementById('new-owner').value;
+            const amount = document.getElementById('topup-amount').value;
+
+            if (!currentUID) {
+                return alert("Please tap your RFID card to the reader first!");
+            }
+
+            const payload = {
+                uid: currentUID,
+                amount: parseInt(amount) || 0,
+                newOwner: name
+            };
+
+            try {
+                document.getElementById('status-tag').innerText = "PROCESSING...";
+                const response = await fetch(`/topup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const resData = await response.json();
+                    document.getElementById('status-tag').innerText = "SUCCESS";
+                    document.getElementById('new-owner').value = '';
+                    document.getElementById('topup-amount').value = '';
+
+                    // Reset to disabled state after delay to wait for hardware removal
+                    setTimeout(() => {
+                        resetUI();
+                    }, 3000);
+
+                    fetchDashboardData(); // Refresh stats after transaction
+                } else {
+                    const error = await response.json();
+                    alert(error.error || "Top-up failed");
+                }
+            } catch (err) {
+                console.error("[HTTP] Fetch error:", err);
+                document.getElementById('status-tag').innerText = "ERROR";
+            }
+        }
+
+        function logActivity(msg) {
+            const log = document.getElementById('activity-log');
+            log.innerHTML += `<p>> ${new Date().toLocaleTimeString()} - ${msg}</p>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function resetUI() {
+            currentUID = null;
+            lastDetectedUID = null;
+            document.getElementById('visual-card-container').classList.add('ui-disabled');
+            document.getElementById('card-actions-container').classList.add('ui-disabled');
+            document.getElementById('display-uid').innerText = "SCAN CARD";
+            document.getElementById('display-name').innerText = "Guest User";
+            document.getElementById('display-balance').innerText = "0 RWF";
+            document.getElementById('current-balance').innerHTML = `0 <span class="text-xl font-normal text-gray-600">RWF</span>`;
+            document.getElementById('status-tag').innerText = "IDLE";
+            document.getElementById('new-owner').value = '';
+            document.getElementById('topup-amount').value = '';
+        }
+
+        // --- DEBUG UTILS ---
+        function simulateScan() {
+            console.log("🛠 [DEBUG] Simulating Card Scan...");
+            const dummyScan = {
+                type: 'card_status',
+                data: {
+                    uid: "DEBUG_MODE_UID",
+                    present: true,
+                    owner: "Test Engineer",
+                    balance: 99999
+                }
+            };
+            // Manually trigger the ws message logic
+            ws.onmessage({ data: JSON.stringify(dummyScan) });
+            logActivity("DEBUG: Manual Bypass Triggered");
+        }
+
+        // --- VIEW MANAGEMENT ---
+        let allCards = [];
+        let currentUser = null;
+
+        function showView(viewName) {
+            // Hide all views
+            document.querySelectorAll('.view-container').forEach(v => v.style.display = 'none');
+
+            // Remove active class from all nav items
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('text-white', 'bg-white/5');
+            });
+
+            // Show selected view
+            document.getElementById(`view-${viewName}`).style.display = 'block';
+
+            // Add active class to selected nav
+            const navItem = document.getElementById(`nav-${viewName}`);
+            if (navItem) {
+                navItem.classList.add('text-white', 'bg-white/5');
+            }
+
+            // Load data for the view
+            switch (viewName) {
+                case 'cards':
+                    loadCards();
+                    break;
+                case 'analytics':
+                    loadAnalytics();
+                    break;
+                case 'profile':
+                    loadProfile();
+                    break;
+                case 'settings':
+                    loadSettings();
+                    break;
+            }
+
+            // Close mobile sidebar
+            if (window.innerWidth < 1024) {
+                toggleSidebar();
+            }
+        }
+
+        // --- CARD REGISTRY ---
+        async function loadCards() {
+            showLoader('LOADING CARDS...');
+            try {
+                const response = await fetch('/cards');
+                if (response.ok) {
+                    allCards = await response.json();
+                    renderCards(allCards);
+                }
+            } catch (err) {
+                console.error('Failed to load cards:', err);
+            } finally {
+                hideLoader();
+            }
+        }
+
+        function renderCards(cards) {
+            const tbody = document.getElementById('cards-table-body');
+            tbody.innerHTML = '';
+
+            if (cards.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">No cards registered yet</td></tr>';
+                return;
+            }
+
+            cards.forEach(card => {
+                // Sanitize and validate data
+                const uid = (card.uid || '').replace(/[^\x20-\x7E]/g, ''); // Remove non-printable chars
+                const owner = (card.owner || 'Guest User').replace(/[^\x20-\x7E]/g, '');
+                const balance = isNaN(card.balance) ? 0 : Number(card.balance);
+                const lastUpdated = card.lastUpdated ? new Date(card.lastUpdated).toLocaleString() : 'Never';
+
+                // Skip invalid entries
+                if (!uid || uid.length < 4) return;
+
+                const row = `<tr>
+                    <td class="p-4 font-mono text-gold">${uid}</td>
+                    <td class="p-4 text-white">${owner}</td>
+                    <td class="p-4 text-right font-bold text-white">${balance.toLocaleString()} RWF</td>
+                    <td class="p-4 text-gray-400">${lastUpdated}</td>
+                </tr>`;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+
+            // If all cards were invalid
+            if (tbody.children.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">No valid cards found</td></tr>';
+            }
+        }
+
+        function filterCards() {
+            const search = document.getElementById('card-search').value.toLowerCase();
+            const filtered = allCards.filter(card =>
+                card.uid.toLowerCase().includes(search) ||
+                (card.owner && card.owner.toLowerCase().includes(search))
+            );
+            renderCards(filtered);
+        }
+
+        function refreshCards() {
+            loadCards();
+        }
+
+        // --- ANALYTICS ---
+        async function loadAnalytics() {
+            try {
+                const response = await fetch('/transactions');
+                if (response.ok) {
+                    const txs = await response.json();
+
+                    // Calculate stats
+                    const totalTx = txs.length;
+                    const avgTx = txs.length > 0 ? txs.reduce((sum, tx) => sum + (tx.amount || 0), 0) / txs.length : 0;
+
+                    // Calculate this week's transactions
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    const weekTx = txs.filter(tx => new Date(tx.timestamp) >= weekAgo)
+                        .reduce((sum, tx) => sum + (tx.amount || 0), 0);
+
+                    // Update stats
+                    document.getElementById('analytics-total-tx').innerText = totalTx;
+                    document.getElementById('analytics-avg-tx').innerHTML = `${avgTx.toFixed(0)} <span class="text-sm text-gray-500">RWF</span>`;
+                    document.getElementById('analytics-week-tx').innerHTML = `${weekTx.toLocaleString()} <span class="text-sm text-gray-500">RWF</span>`;
+
+                    // Render transactions table
+                    const tbody = document.getElementById('analytics-table-body');
+                    tbody.innerHTML = '';
+
+                    if (txs.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">No transactions yet</td></tr>';
+                    } else {
+                        txs.forEach(tx => {
+                            const row = `<tr>
+                                <td class="p-4 text-gray-400">${new Date(tx.timestamp).toLocaleString()}</td>
+                                <td class="p-4 font-mono text-gold">${tx.uid}</td>
+                                <td class="p-4 text-white">${tx.owner || 'Guest User'}</td>
+                                <td class="p-4 text-right font-bold ${tx.amount >= 0 ? 'text-green-500' : 'text-red-500'}">${tx.amount >= 0 ? '+' : ''}${(tx.amount || 0).toLocaleString()} RWF</td>
+                                <td class="p-4 text-right font-bold text-white">${(tx.newBalance || 0).toLocaleString()} RWF</td>
+                            </tr>`;
+                            tbody.insertAdjacentHTML('beforeend', row);
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load analytics:', err);
+            }
+        }
+
+        // --- PROFILE ---
+        async function loadProfile() {
+            if (!currentUser) return;
+
+            document.getElementById('profile-name').innerText = currentUser.username;
+            document.getElementById('profile-email').innerText = currentUser.email;
+            document.getElementById('profile-username').value = currentUser.username;
+            document.getElementById('profile-email-input').value = currentUser.email;
+            document.getElementById('profile-created').value = currentUser.createdAt ? new Date(currentUser.createdAt).toLocaleDateString() : 'Unknown';
+
+            // Update avatar
+            const initials = currentUser.username.split(' ').map(n => n[0]).join('').toUpperCase();
+            document.getElementById('profile-avatar').innerText = initials;
+        }
+
+        // --- SETTINGS ---
+        async function loadSettings() {
+            try {
+                const statsRes = await fetch('/stats');
+                if (statsRes.ok) {
+                    const stats = await statsRes.json();
+                    document.getElementById('settings-active-cards').innerText = stats.active_cards;
+                }
+
+                const txRes = await fetch('/transactions');
+                if (txRes.ok) {
+                    const txs = await txRes.json();
+                    document.getElementById('settings-total-tx').innerText = txs.length;
+                }
+
+                // Update WS status
+                const wsConnected = ws && ws.readyState === WebSocket.OPEN;
+                document.getElementById('settings-ws-status').innerText = wsConnected ? 'Connected' : 'Disconnected';
+            } catch (err) {
+                console.error('Failed to load settings:', err);
+            }
+        }
+
+        // --- LOGOUT ---
+        async function logout() {
+            try {
+                await fetch('/logout', { method: 'POST', credentials: 'include' });
+                window.location.href = 'auth.html';
+            } catch (err) {
+                console.error('Logout failed:', err);
+                window.location.href = 'auth.html';
+            }
+        }
+
+        // --- EXPORT LOGS ---
+        function exportLogs() {
+            const logs = document.getElementById('activity-log').innerText;
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dilocash-logs-${new Date().toISOString()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+
+</html>

@@ -82,21 +82,34 @@ def process_scan(client, uid):
     
     uid = uid.strip().upper()
     
-    # Fetch balance from backend database instead of local memory
+    # Fetch balance from backend database (cloud server)
     try:
         import requests
-        response = requests.get(f"http://localhost:8080/card/{uid}", timeout=2)
-        if response.ok:
-            card_data = response.json()
-            balance = card_data.get('balance', 50.0)
-            print(f"\n✨ CARD SCANNED: {uid} | Balance from DB: {balance} RWF")
+        # Try cloud server first, then local
+        backend_urls = [
+            f"http://157.173.101.159:9249/card/{uid}",  # Cloud server
+            f"http://localhost:8080/card/{uid}"          # Local server
+        ]
+        
+        balance = 50.0  # Default
+        for url in backend_urls:
+            try:
+                response = requests.get(url, timeout=2)
+                if response.ok:
+                    card_data = response.json()
+                    balance = card_data.get('balance', 50.0)
+                    print(f"\n✨ CARD SCANNED: {uid} | Balance from DB: {balance} RWF")
+                    break
+            except:
+                continue
         else:
-            # Card not in DB yet, use default
-            balance = 50.0
-            print(f"\n✨ CARD SCANNED: {uid} | New card, default balance: {balance} RWF")
+            # No backend reachable, use cached or default
+            balance = simulated_cards.get(uid, 50.0)
+            print(f"\n✨ CARD SCANNED: {uid} | Using cached balance: {balance} RWF")
+            
     except Exception as e:
         # Fallback if backend is unreachable
-        print(f"⚠️ Backend unreachable, using cached balance")
+        print(f"⚠️ Backend unreachable: {e}")
         balance = simulated_cards.get(uid, 50.0)
     
     # Cache it locally for this session

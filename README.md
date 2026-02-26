@@ -9,6 +9,7 @@ A complete RFID card management system with real-time balance tracking, top-up f
 ## 🌐 Live Demo
 
 Access the live application at: **http://157.173.101.159:9249**
+or on **https://tapgo.vercel.app/**
 
 **Test Credentials:**
 - Create an account via the registration page
